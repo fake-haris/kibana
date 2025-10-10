@@ -1,0 +1,51 @@
+/*
+ * Copyright Elasticsearch B.V. and/or licensed to Elasticsearch B.V. under one
+ * or more contributor license agreements. Licensed under the "Elastic License
+ * 2.0", the "GNU Affero General Public License v3.0 only", and the "Server Side
+ * Public License v 1"; you may not use this file except in compliance with, at
+ * your election, the "Elastic License 2.0", the "GNU Affero General Public
+ * License v3.0 only", or the "Server Side Public License, v 1".
+ */
+
+import type { ScoutPage } from '..';
+
+export class Inspector {
+  constructor(private readonly page: ScoutPage) {}
+
+  async open() {
+    await this.page.testSubj.click('inspectorPanelButton');
+    await this.page.testSubj.waitForSelector('inspectorPanel', { state: 'visible' });
+  }
+
+  async close() {
+    const isOpen = await this.page.testSubj.isVisible('inspectorPanel');
+    if (isOpen) {
+      await this.page.testSubj.click('euiFlyoutCloseButton');
+      await this.page.testSubj.waitForSelector('inspectorPanel', { state: 'hidden' });
+    }
+  }
+
+  async getTableData(): Promise<string[][]> {
+    const table = this.page.locator('[data-test-subj="inspectorTable"] table');
+    await table.waitFor({ state: 'visible' });
+
+    const rows = table.locator('tbody tr');
+    const rowCount = await rows.count();
+    const data: string[][] = [];
+
+    for (let i = 0; i < rowCount; i++) {
+      const row = rows.nth(i);
+      const cells = row.locator('td');
+      const cellCount = await cells.count();
+      const rowData: string[] = [];
+
+      for (let j = 0; j < cellCount; j++) {
+        rowData.push(await cells.nth(j).innerText());
+      }
+
+      data.push(rowData);
+    }
+
+    return data;
+  }
+}

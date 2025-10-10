@@ -15,9 +15,13 @@ import { DashboardApp } from './dashboard_app';
 import { DatePicker } from './date_picker';
 import { DiscoverApp } from './discover_app';
 import { FilterBar } from './fiter_bar';
+import { Inspector } from './inspector';
 import { MapsPage } from './maps_page';
+import { QueryBar } from './query_bar';
 import { RenderablePage } from './renderable_page';
+import { TimePicker } from './time_picker';
 import { Toasts } from './toasts';
+import { UnifiedFieldList } from './unified_field_list';
 import { createLazyPageObject } from './utils';
 
 export interface PageObjectsFixtures {
@@ -31,10 +35,14 @@ export interface PageObjects {
   discover: DiscoverApp;
   dashboard: DashboardApp;
   filterBar: FilterBar;
+  inspector: Inspector;
   maps: MapsPage;
+  queryBar: QueryBar;
   renderable: RenderablePage;
+  timePicker: TimePicker;
   collapsibleNav: CollapsibleNav;
   toasts: Toasts;
+  unifiedFieldList: UnifiedFieldList;
 }
 
 /**
@@ -49,10 +57,14 @@ export function createCorePageObjects(fixtures: PageObjectsFixtures): PageObject
     dashboard: createLazyPageObject(DashboardApp, fixtures.page),
     discover: createLazyPageObject(DiscoverApp, fixtures.page),
     filterBar: createLazyPageObject(FilterBar, fixtures.page),
+    inspector: createLazyPageObject(Inspector, fixtures.page),
     maps: createLazyPageObject(MapsPage, fixtures.page),
+    queryBar: createLazyPageObject(QueryBar, fixtures.page),
     renderable: createLazyPageObject(RenderablePage, fixtures.page),
+    timePicker: createLazyPageObject(TimePicker, fixtures.page),
     collapsibleNav: createLazyPageObject(CollapsibleNav, fixtures.page, fixtures.config),
     toasts: createLazyPageObject(Toasts, fixtures.page),
+    unifiedFieldList: createLazyPageObject(UnifiedFieldList, fixtures.page),
     // Add new page objects here
   };
 }
