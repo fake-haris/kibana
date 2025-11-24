@@ -8,6 +8,7 @@
  */
 
 import type { ScoutPage } from '..';
+import expect from '..';
 
 type CommonlyUsedTimeRange =
   | 'Today'
@@ -39,6 +40,11 @@ export class DashboardApp {
     await this.page.testSubj.fill('savedObjectTitle', name);
     await this.page.testSubj.click('confirmSaveSavedObjectButton');
     await this.page.testSubj.waitForSelector('confirmSaveSavedObjectButton', { state: 'hidden' });
+  }
+
+  async saveChangesToExistingDashboard() {
+    await this.page.testSubj.click('dashboardQuickSaveMenuItem');
+    await expect(this.page.testSubj.locator('dashboardQuickSaveMenuItem')).toBeDisabled();
   }
 
   async addPanelFromLibrary(...names: string[]) {
@@ -116,5 +122,26 @@ export class DashboardApp {
     }
 
     throw new Error(`Timeout waiting for ${expectedCount} elements matching ${options.selector}`);
+  }
+
+  async addNewPanel(panelType: 'ES|QL' | 'Lens' | 'Custom visualization') {
+    await this.page.testSubj.click('dashboardAddTopNavButton');
+    await this.page.testSubj.click('dashboardOpenAddPanelFlyoutButton');
+    await this.page.testSubj.click(`create-action-${panelType}`);
+    await this.page.testSubj.waitForSelector('dashboardPanelSelectionFlyout', { state: 'hidden' });
+  }
+
+  async addRecordersAndSave() {
+    await this.page.testSubj
+      .locator('lnsFieldListPanelField-___records___')
+      .dragTo(this.page.testSubj.locator('workspace-drag-drop-prompt'));
+    await this.page.testSubj.waitForSelector('echScreenReaderSummary', { state: 'visible' });
+    await this.page.testSubj.click('lnsApp_saveAndReturnButton');
+    await this.page.testSubj.waitForSelector('echChart', { state: 'visible' });
+  }
+
+  async applyAndCloseESQLPanel() {
+    await this.page.testSubj.click('applyFlyoutButton');
+    await this.page.testSubj.waitForSelector('lens-embeddable', { state: 'visible' });
   }
 }
