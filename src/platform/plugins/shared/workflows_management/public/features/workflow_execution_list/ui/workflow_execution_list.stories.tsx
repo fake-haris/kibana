@@ -19,6 +19,7 @@ const WorkflowExecutionListWithState = (props: WorkflowExecutionListProps) => {
   const [filters, setFilters] = useState<ExecutionListFiltersQueryParams>({
     statuses: [],
     executionTypes: [],
+    executedBy: [],
   });
   return <WorkflowExecutionList {...props} filters={filters} onFiltersChange={setFilters} />;
 };
@@ -36,6 +37,7 @@ type Story = StoryObj<typeof WorkflowExecutionList>;
 const mockFilters: WorkflowExecutionListProps['filters'] = {
   statuses: [ExecutionStatus.PENDING, ExecutionStatus.RUNNING, ExecutionStatus.WAITING_FOR_INPUT],
   executionTypes: [ExecutionType.PRODUCTION],
+  executedBy: [],
 };
 
 export const Default: Story = {
@@ -47,6 +49,7 @@ export const Default: Story = {
           status: ExecutionStatus.RUNNING,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           isTestRun: false,
           spaceId: 'default',
           duration: parseDuration('1m28s'),
@@ -58,6 +61,7 @@ export const Default: Story = {
           isTestRun: true,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           spaceId: 'default',
           duration: parseDuration('1h2m'),
           stepId: 'my_first_step',
@@ -68,6 +72,7 @@ export const Default: Story = {
           isTestRun: false,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           spaceId: 'default',
           duration: parseDuration('1d2h'),
           stepId: 'my_first_step',
@@ -78,6 +83,7 @@ export const Default: Story = {
           isTestRun: false,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           duration: parseDuration('1w2d'),
           spaceId: 'default',
           stepId: 'my_first_step',
@@ -88,6 +94,7 @@ export const Default: Story = {
           isTestRun: false,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           duration: parseDuration('1m28s'),
           spaceId: 'default',
           stepId: 'my_first_step',
@@ -98,6 +105,7 @@ export const Default: Story = {
           isTestRun: true,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           duration: parseDuration('280ms'),
           spaceId: 'default',
           stepId: 'my_first_step',
@@ -108,6 +116,7 @@ export const Default: Story = {
           isTestRun: true,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           duration: parseDuration('28s'),
           spaceId: 'default',
           stepId: 'my_first_step',
@@ -179,6 +188,7 @@ export const LoadingMore: Story = {
           isTestRun: false,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           spaceId: 'default',
           duration: parseDuration('1h2m'),
           stepId: 'my_first_step',
@@ -189,6 +199,7 @@ export const LoadingMore: Story = {
           isTestRun: false,
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
+          error: null,
           spaceId: 'default',
           duration: parseDuration('1d2h'),
           stepId: 'my_first_step',

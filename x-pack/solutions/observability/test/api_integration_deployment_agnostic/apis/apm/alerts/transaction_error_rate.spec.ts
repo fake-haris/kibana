@@ -7,10 +7,10 @@
 
 import { ApmRuleType } from '@kbn/rule-data-utils';
 import { transactionErrorRateActionVariables } from '@kbn/apm-plugin/server/routes/alerts/rule_types/transaction_error_rate/register_transaction_error_rate_rule_type';
-import { apm, timerange } from '@kbn/apm-synthtrace-client';
+import { apm, timerange } from '@kbn/synthtrace-client';
 import expect from '@kbn/expect';
 import { omit } from 'lodash';
-import type { ApmSynthtraceEsClient } from '@kbn/apm-synthtrace';
+import type { ApmSynthtraceEsClient } from '@kbn/synthtrace';
 import type { RoleCredentials } from '../../../services';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { ApmAlertFields } from './helpers/alerting_helper';
@@ -243,7 +243,9 @@ export default function ApiTest({ getService }: DeploymentAgnosticFtrProviderCon
       });
     });
 
-    describe('create rule with kql query', () => {
+    describe('create rule with kql query', function () {
+      this.tags('skipCloud');
+
       let ruleId: string;
       let alerts: ApmAlertFields[];
 

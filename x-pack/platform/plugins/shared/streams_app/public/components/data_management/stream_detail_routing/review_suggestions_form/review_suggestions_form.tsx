@@ -54,10 +54,20 @@ export function ReviewSuggestionsForm({
   onRegenerate,
 }: ReviewSuggestionsFormProps) {
   const ruleUnderReview = useStreamsRoutingSelector((snapshot) =>
-    snapshot.matches({ ready: 'reviewSuggestedRule' }) ? snapshot.context.suggestedRuleId : null
+    snapshot.matches({ ready: { ingestMode: 'reviewSuggestedRule' } })
+      ? snapshot.context.suggestedRuleId
+      : null
   );
   const editingSuggestion = useStreamsRoutingSelector((snapshot) =>
-    snapshot.matches({ ready: 'editingSuggestedRule' }) ? snapshot.context.editedSuggestion : null
+    snapshot.matches({ ready: { ingestMode: 'editingSuggestedRule' } })
+      ? snapshot.context.editedSuggestion
+      : null
+  );
+
+  const isEditingOrReorderingStreams = useStreamsRoutingSelector(
+    (snapshot) =>
+      snapshot.matches({ ready: { ingestMode: 'editingRule' } }) ||
+      snapshot.matches({ ready: { ingestMode: 'reorderingRules' } })
   );
 
   // For the confirmation modal, use edited suggestion if available, otherwise find by name
@@ -107,6 +117,7 @@ export function ReviewSuggestionsForm({
         className={css`
           min-block-size: auto; /* Prevent background clipping */
         `}
+        data-test-subj="streamsAppReviewPartitioningSuggestionsCallout"
       >
         <EuiText size="s">
           {i18n.translate(
@@ -118,35 +129,51 @@ export function ReviewSuggestionsForm({
           )}
         </EuiText>
         <EuiSpacer size="m" />
-        {suggestions.map((partition, index) => (
-          <NestedView key={partition.name} last={index === suggestions.length - 1}>
-            <SuggestedStreamPanel
-              definition={definition}
-              partition={partition}
-              index={index}
-              onPreview={(toggle) => previewSuggestion(index, toggle)}
-              onDismiss={() => rejectSuggestion(index, selectedPreviewName === partition.name)}
-              onEdit={editSuggestion}
-              onSave={handleSave}
+        {isEditingOrReorderingStreams ? (
+          <>
+            <EuiCallOut
+              size="s"
+              color="primary"
+              iconType="info"
+              title={i18n.translate('xpack.streams.reviewSuggestionsForm.actionsDisabled', {
+                defaultMessage: 'Finish editing or reordering streams to interact with suggestions',
+              })}
             />
-            <EuiSpacer size="s" />
-          </NestedView>
-        ))}
-        <EuiSpacer size="m" />
-        <GenerateSuggestionButton
-          iconType="refresh"
-          size="s"
-          onClick={onRegenerate}
-          isLoading={isLoadingSuggestions}
-          aiFeatures={aiFeatures}
-        >
-          {i18n.translate(
-            'xpack.streams.streamDetailRouting.childStreamList.regenerateSuggestedPartitions',
-            {
-              defaultMessage: 'Regenerate',
-            }
-          )}
-        </GenerateSuggestionButton>
+            <EuiSpacer size="m" />
+          </>
+        ) : (
+          <>
+            {suggestions.map((partition, index) => (
+              <NestedView key={partition.name} last={index === suggestions.length - 1}>
+                <SuggestedStreamPanel
+                  definition={definition}
+                  partition={partition}
+                  index={index}
+                  onPreview={(toggle) => previewSuggestion(index, toggle)}
+                  onDismiss={() => rejectSuggestion(index, selectedPreviewName === partition.name)}
+                  onEdit={editSuggestion}
+                  onSave={handleSave}
+                />
+                <EuiSpacer size="s" />
+              </NestedView>
+            ))}
+            <EuiSpacer size="m" />
+            <GenerateSuggestionButton
+              iconType="refresh"
+              size="s"
+              onClick={onRegenerate}
+              isLoading={isLoadingSuggestions}
+              aiFeatures={aiFeatures}
+            >
+              {i18n.translate(
+                'xpack.streams.streamDetailRouting.childStreamList.regenerateSuggestedPartitions',
+                {
+                  defaultMessage: 'Regenerate',
+                }
+              )}
+            </GenerateSuggestionButton>
+          </>
+        )}
       </EuiCallOut>
     </>
   );

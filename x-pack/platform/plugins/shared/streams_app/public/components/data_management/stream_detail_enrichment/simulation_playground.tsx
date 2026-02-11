@@ -5,17 +5,20 @@
  * 2.0.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { i18n } from '@kbn/i18n';
 import {
   EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiIconTip,
   EuiNotificationBadge,
+  EuiPanel,
   EuiProgress,
   EuiSpacer,
   EuiTab,
   EuiTabs,
+  EuiToolTip,
 } from '@elastic/eui';
 import { ProcessorOutcomePreview } from './processor_outcome_preview';
 import {
@@ -28,6 +31,7 @@ import type { SchemaEditorField } from '../schema_editor/types';
 import { DataSourcesControls } from './data_sources_controls';
 import { getActiveDataSourceRef } from './state_management/stream_enrichment_state_machine/utils';
 import { useDataSourceSelector } from './state_management/data_source_state_machine';
+import { selectWhetherThereAreOutdatedDocumentsInSimulation } from './state_management/stream_enrichment_state_machine/selectors';
 
 export const SimulationPlayground = ({
   schemaEditorFields,
@@ -56,28 +60,44 @@ export const SimulationPlayground = ({
     state ? state.matches({ enabled: 'loadingData' }) : false
   );
 
+  const dataSourceContext = useDataSourceSelector(activeDataSourceRef, (state) => state?.context);
+
+  const hasOutdatedDocuments = useStreamEnrichmentSelector((state) =>
+    selectWhetherThereAreOutdatedDocumentsInSimulation(state.context, dataSourceContext)
+  );
+
   const detectedFields = useSimulatorSelector((state) => state.context.detectedSchemaFields);
+
+  const [isRefreshTooltipVisible, setIsRefreshTooltipVisible] = useState(false);
 
   return (
     <>
       <EuiFlexItem grow={false}>
-        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
+        <EuiFlexGroup justifyContent="spaceBetween" alignItems="center" gutterSize="s">
           <EuiFlexItem>
             <EuiTabs bottomBorder={false}>
               <EuiTab
                 isSelected={isViewingDataPreview}
-                onClick={viewSimulationPreviewData}
                 append={
-                  <EuiButtonIcon
-                    iconType="refresh"
-                    onClick={refreshSimulation}
-                    isLoading={isDataSourceLoading}
-                    aria-label={i18n.translate(
-                      'xpack.streams.streamDetailView.managementTab.enrichment.simulationPlayground.refreshPreviewAriaLabel',
-                      { defaultMessage: 'Refresh data preview' }
+                  <>
+                    {hasOutdatedDocuments && (
+                      <EuiFlexItem data-test-subj="streamsAppProcessingOutdatedDocumentsTipAnchor">
+                        <EuiIconTip
+                          content={i18n.translate(
+                            'xpack.streams.streamDetailView.managementTab.enrichment.simulationPlayground.outdatedDocumentsTooltip.content',
+                            {
+                              defaultMessage:
+                                'Some documents are older than the most recent stream changes. Refresh to update simulation samples.',
+                            }
+                          )}
+                          type="warning"
+                          color="warning"
+                        />
+                      </EuiFlexItem>
                     )}
-                  />
+                  </>
                 }
+                onClick={viewSimulationPreviewData}
               >
                 {i18n.translate(
                   'xpack.streams.streamDetailView.managementTab.enrichment.simulationPlayground.dataPreview',
@@ -89,7 +109,9 @@ export const SimulationPlayground = ({
                 onClick={viewSimulationDetectedFields}
                 append={
                   detectedFields.length > 0 ? (
-                    <EuiNotificationBadge size="m">{detectedFields.length}</EuiNotificationBadge>
+                    <EuiNotificationBadge size="m" data-test-subj="streamsAppModifiedFieldsBadge">
+                      {detectedFields.length}
+                    </EuiNotificationBadge>
                   ) : undefined
                 }
               >
@@ -102,6 +124,36 @@ export const SimulationPlayground = ({
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <DataSourcesControls />
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            <EuiPanel paddingSize="xs" hasShadow={false} hasBorder>
+              <EuiToolTip
+                content={
+                  isRefreshTooltipVisible
+                    ? i18n.translate(
+                        'xpack.streams.streamDetailView.managementTab.enrichment.simulationPlayground.refreshPreviewTooltip',
+                        {
+                          defaultMessage: 'Refetch samples and rerun simulation',
+                        }
+                      )
+                    : undefined
+                }
+                onMouseOut={() => setIsRefreshTooltipVisible(false)}
+              >
+                <EuiButtonIcon
+                  iconType="refresh"
+                  size="xs"
+                  onClick={refreshSimulation}
+                  isLoading={isDataSourceLoading}
+                  onMouseEnter={() => setIsRefreshTooltipVisible(true)}
+                  onMouseLeave={() => setIsRefreshTooltipVisible(false)}
+                  aria-label={i18n.translate(
+                    'xpack.streams.streamDetailView.managementTab.enrichment.simulationPlayground.refreshPreviewAriaLabel',
+                    { defaultMessage: 'Refresh data preview' }
+                  )}
+                />
+              </EuiToolTip>
+            </EuiPanel>
           </EuiFlexItem>
           <ProgressBar />
         </EuiFlexGroup>

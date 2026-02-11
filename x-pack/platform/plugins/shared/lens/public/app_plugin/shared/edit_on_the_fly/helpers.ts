@@ -12,8 +12,8 @@ import {
   mapVariableToColumn,
 } from '@kbn/esql-utils';
 import { type AggregateQuery, buildEsQuery } from '@kbn/es-query';
-import type { IUiSettingsClient } from '@kbn/core/public';
-import { getEsQueryConfig } from '@kbn/data-plugin/public';
+import type { CoreStart, IUiSettingsClient } from '@kbn/core/public';
+import { getEsQueryConfig, UI_SETTINGS } from '@kbn/data-plugin/public';
 import type { ESQLControlVariable } from '@kbn/esql-types';
 import type { ESQLRow } from '@kbn/es-types';
 import { getLensAttributesFromSuggestion, mapVisToChartType } from '@kbn/visualization-utils';
@@ -59,6 +59,7 @@ export const getGridAttrs = async (
   query: AggregateQuery,
   adHocDataViews: DataViewSpec[],
   data: DataPublicPluginStart,
+  http: CoreStart['http'],
   uiSettings: IUiSettingsClient,
   abortController?: AbortController,
   esqlVariables: ESQLControlVariable[] = []
@@ -74,10 +75,11 @@ export const getGridAttrs = async (
         dataViewsService: data.dataViews,
         query: query.esql,
         options: { skipFetchFields: true },
+        http,
       });
 
   const filter = getDSLFilter(data.query, uiSettings, dataView.timeFieldName);
-
+  const timezone = uiSettings.get<'Browser' | string>(UI_SETTINGS.DATEFORMAT_TZ);
   const results = await getESQLResults({
     esqlQuery: query.esql,
     search: data.search.search,
@@ -86,6 +88,7 @@ export const getGridAttrs = async (
     dropNullColumns: true,
     timeRange: data.query.timefilter.timefilter.getAbsoluteTime(),
     variables: esqlVariables,
+    timezone,
   });
 
   let queryColumns = results.response.columns;
@@ -107,6 +110,7 @@ export const getGridAttrs = async (
 export const getSuggestions = async (
   query: AggregateQuery,
   data: DataPublicPluginStart,
+  http: CoreStart['http'],
   uiSettings: IUiSettingsClient,
   datasourceMap: DatasourceMap,
   visualizationMap: VisualizationMap,
@@ -123,6 +127,7 @@ export const getSuggestions = async (
       query,
       adHocDataViews,
       data,
+      http,
       uiSettings,
       abortController,
       esqlVariables

@@ -258,7 +258,6 @@ export type {
   IntegrationCallbacks,
   LensPublicCallbacks,
   LensApiCallbacks,
-  LensRequestHandlersProps,
   LensUnifiedSearchContext,
   LensPanelProps,
   LensSharedProps,
@@ -272,10 +271,12 @@ export type {
   ExpressionWrapperProps,
   GetStateType,
   StructuredDatasourceStates,
+  SupportedDatasourceId,
   LensByValueInput,
   TypedLensSerializedState,
   ESQLVariablesCompatibleDashboardApi,
   LensByValueBase,
+  LensRequestHandlersProps,
 } from './embeddable/types';
 export type {
   LensAppLocatorParams,
@@ -317,6 +318,7 @@ export {
   DEFAULT_ROW_HEIGHT,
   DEFAULT_ROW_HEIGHT_LINES,
   ROW_HEIGHT_LINES_KEYS,
+  LEGACY_SINGLE_ROW_HEIGHT_MODE,
 } from './visualizations/datatable/constants';
 export {
   LENS_GAUGE_ID,
@@ -374,6 +376,7 @@ export {
   SeriesTypes,
   visualizationSubtypes,
   visualizationTypes,
+  AvailableReferenceLineIcons,
 } from './visualizations/xy/constants';
 export { LENS_SHARE_STATE_ACTION } from './locator_types';
 export { defaultSeriesType } from './visualizations/xy/types';
@@ -381,3 +384,10 @@ export {
   getLensLayerTypeTabDisplayName,
   lensLayerTypeTabDisplayNames,
 } from './visualizations/layer_type_tab_display_name';
+
+export {
+  hasStateFormulaColumn,
+  getFormulaColumnsFromLayer,
+  getReferencedColumnIds,
+  cleanupFormulaReferenceColumns,
+} from './datasources/form_based/helpers';

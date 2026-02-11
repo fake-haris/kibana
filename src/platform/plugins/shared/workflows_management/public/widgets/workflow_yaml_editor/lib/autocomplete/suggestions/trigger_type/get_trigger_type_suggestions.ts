@@ -8,12 +8,10 @@
  */
 
 import { monaco } from '@kbn/monaco';
-import type { TriggerType } from '@kbn/workflows';
-import {
-  AlertRuleTriggerSchema,
-  ManualTriggerSchema,
-  ScheduledTriggerSchema,
-} from '@kbn/workflows';
+import { AlertRuleTriggerSchema } from '@kbn/workflows/spec/schema/triggers/alert_trigger_schema';
+import { ManualTriggerSchema } from '@kbn/workflows/spec/schema/triggers/manual_trigger_schema';
+import { ScheduledTriggerSchema } from '@kbn/workflows/spec/schema/triggers/scheduled_trigger_schema';
+import type { TriggerType } from '@kbn/workflows/spec/schema/triggers/trigger_schema';
 import { generateTriggerSnippet } from '../../../snippets/generate_trigger_snippet';
 
 /**
@@ -105,7 +103,7 @@ export function getBuiltInTriggerTypesFromSchema(): Array<{
   const triggerTypes = triggerSchemas.map(({ schema, description, icon }) => {
     // Extract the literal type value from the Zod schema
     const typeField = schema.shape.type;
-    const triggerType = typeField._def.value; // Get the literal value from z.literal()
+    const triggerType = typeField.def.values[0] as string; // Get the literal value from z.literal()
 
     return {
       type: triggerType,

@@ -12,6 +12,7 @@ import type { DataPublicPluginStart } from '@kbn/data-plugin/public';
 import type { DataViewsPublicPluginStart } from '@kbn/data-views-plugin/public';
 import type { FieldFormatsStart } from '@kbn/field-formats-plugin/public';
 import type { Storage } from '@kbn/kibana-utils-plugin/public';
+import type { LicensingPluginStart } from '@kbn/licensing-plugin/public';
 import type { NavigationPublicPluginStart } from '@kbn/navigation-plugin/public';
 import type { ServerlessPluginStart } from '@kbn/serverless/public';
 import type { SpacesPluginStart } from '@kbn/spaces-plugin/public';
@@ -20,6 +21,7 @@ import type {
   TriggersAndActionsUIPublicPluginStart,
 } from '@kbn/triggers-actions-ui-plugin/public';
 import type { UnifiedSearchPublicPluginStart } from '@kbn/unified-search-plugin/public';
+import type { WorkflowsExtensionsPublicPluginStart } from '@kbn/workflows-extensions/public';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface WorkflowsPublicPluginSetup {}
@@ -27,6 +29,8 @@ export interface WorkflowsPublicPluginSetup {}
 export interface WorkflowsPublicPluginSetupDependencies {
   triggersActionsUi: TriggersAndActionsUIPublicPluginSetup;
 }
+
+import type { TelemetryServiceClient } from './common/lib/telemetry/types';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface WorkflowsPublicPluginStart {}
@@ -40,10 +44,15 @@ export interface WorkflowsPublicPluginStartDependencies {
   data: DataPublicPluginStart;
   spaces: SpacesPluginStart;
   triggersActionsUi: TriggersAndActionsUIPublicPluginStart;
+  workflowsExtensions: WorkflowsExtensionsPublicPluginStart;
+  licensing: LicensingPluginStart;
 }
 
 export interface WorkflowsPublicPluginStartAdditionalServices {
   storage: Storage;
+  workflowsManagement: {
+    telemetry: TelemetryServiceClient;
+  };
 }
 
 export type WorkflowsServices = CoreStart &

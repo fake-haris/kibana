@@ -26,14 +26,14 @@ import { SCOUT_REPORT_OUTPUT_ROOT } from '@kbn/scout-info';
 import { ToolingLog } from '@kbn/tooling-log';
 import path from 'node:path';
 import {
+  computeTestID,
   excapeHtmlCharacters,
   generateTestRunId,
   getKibanaModuleData,
+  getRunCommand,
   getRunTarget,
-  getTestIDForTitle,
   parseStdout,
   stripFilePath,
-  stripRunCommand,
 } from '../../../helpers';
 import type { TestFailure } from '../../report';
 import { ScoutFailureReport } from '../../report';
@@ -63,7 +63,7 @@ export class ScoutFailedTestReporter implements Reporter {
     this.report = new ScoutFailureReport(this.log);
     this.codeOwnersEntries = getCodeOwnersEntries();
     this.runId = this.reporterOptions.runId || generateTestRunId();
-    this.command = stripRunCommand(process.argv);
+    this.command = getRunCommand();
   }
 
   private getFileOwners(filePath: string): string[] {
@@ -115,8 +115,13 @@ export class ScoutFailedTestReporter implements Reporter {
       return;
     }
 
+    // We don't include the first three elements in the title path (root suite, project, test file path)
+    // for full test titles in Scout, especially not when calculating test IDs
+    const fullTestTitle = test.titlePath().slice(3).join(' ');
+    const testFilePath = path.relative(REPO_ROOT, test.location.file);
+
     const testFailure: TestFailure = {
-      id: getTestIDForTitle(test.titlePath().join(' ')),
+      id: computeTestID(testFilePath, fullTestTitle),
       suite: test.parent.title,
       title: test.title,
       target: this.target,

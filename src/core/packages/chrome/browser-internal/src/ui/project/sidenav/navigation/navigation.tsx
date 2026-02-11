@@ -15,13 +15,10 @@ import classnames from 'classnames';
 import type {
   ChromeNavLink,
   ChromeProjectNavigationNode,
-  ChromeRecentlyAccessedHistoryItem,
   NavigationTreeDefinitionUI,
 } from '@kbn/core-chrome-browser';
 import type { IBasePath as BasePath } from '@kbn/core-http-browser';
 import type { ApplicationStart } from '@kbn/core-application-browser';
-import type { NavigationTourManager } from '@kbn/core-chrome-navigation-tour';
-import { NavigationTour } from '@kbn/core-chrome-navigation-tour';
 import { KibanaSectionErrorBoundary } from '@kbn/shared-ux-error-boundary';
 import useObservable from 'react-use/lib/useObservable';
 import type { NavigationItems } from './to_navigation_items';
@@ -44,22 +41,22 @@ export interface ChromeNavigationProps {
   navLinks$: Observable<Readonly<ChromeNavLink[]>>;
   activeNodes$: Observable<ChromeProjectNavigationNode[][]>;
 
-  // tour
-  navigationTourManager: NavigationTourManager;
-
-  // other state that might be needed later
-  recentlyAccessed$: Observable<ChromeRecentlyAccessedHistoryItem[]>;
-  isFeedbackBtnVisible$: Observable<boolean>;
-  loadingCount$: Observable<number>;
-  dataTestSubj$?: Observable<string | undefined>;
-
+  // feedback
+  isFeedbackEnabled$: Observable<boolean>;
   feedbackUrlParams$: Observable<URLSearchParams | undefined>;
+
+  // collapse toggle callback
+  onToggleCollapsed: (isCollapsed: boolean) => void;
+
+  // other
+  dataTestSubj$?: Observable<string | undefined>;
 }
 
 export const Navigation = (props: ChromeNavigationProps) => {
   const state = useNavigationItems(props);
   const dataTestSubj = useObservable(props.dataTestSubj$ ?? EMPTY, undefined);
   const feedbackUrlParams = useObservable(props.feedbackUrlParams$ ?? EMPTY, undefined);
+  const isFeedbackEnabled = useObservable(props.isFeedbackEnabled$ ?? EMPTY, true);
 
   if (!state) {
     return null;
@@ -69,24 +66,19 @@ export const Navigation = (props: ChromeNavigationProps) => {
 
   return (
     <KibanaSectionErrorBoundary sectionName={'Navigation'} maxRetries={3}>
-      <NavigationTour
-        tourManager={props.navigationTourManager}
-        key={
-          // Force remount (and reset position) the tour when the nav is collapsed/expanded
-          props.isCollapsed ? 'collapsed' : 'expanded'
-        }
-      />
       <NavigationComponent
         items={navItems}
         logo={logoItem}
         sidePanelFooter={
           <NavigationFeedbackSnippet
+            isEnabled={isFeedbackEnabled}
             solutionId={solutionId}
             feedbackUrlParams={feedbackUrlParams}
           />
         }
         isCollapsed={props.isCollapsed}
         setWidth={props.setWidth}
+        onToggleCollapsed={props.onToggleCollapsed}
         activeItemId={activeItemId}
         data-test-subj={classnames(dataTestSubj, 'projectSideNav', 'projectSideNavV2')}
       />

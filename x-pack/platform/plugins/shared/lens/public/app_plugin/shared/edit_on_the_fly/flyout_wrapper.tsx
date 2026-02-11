@@ -39,13 +39,13 @@ export const FlyoutWrapper = ({
   isInlineFlyoutVisible,
   isScrollable,
   displayFlyoutHeader,
-  isNewPanel,
   isSaveable,
   onCancel,
   navigateToLensEditor,
   onApply,
   isReadOnly,
   applyButtonLabel = applyAndCloseLabel,
+  applyButtonDisabledTooltip,
 }: FlyoutWrapperProps) => {
   const { euiTheme } = useEuiTheme();
   return (
@@ -104,7 +104,7 @@ export const FlyoutWrapper = ({
           {(navigateToLensEditor || toolbar) && (
             <>
               <EuiFlexGroup
-                gutterSize="s"
+                gutterSize="xs"
                 justifyContent="spaceBetween"
                 alignItems="center"
                 responsive={false}
@@ -177,6 +177,7 @@ export const FlyoutWrapper = ({
             }
           }
           .euiFlyoutBody__overflowContent {
+            background-color: ${euiTheme.colors.emptyShade};
             padding: 0;
           }
         `}
@@ -204,15 +205,20 @@ export const FlyoutWrapper = ({
             </EuiFlexItem>
             {isReadOnly ? null : (
               <EuiFlexItem grow={false}>
-                <EuiButton
-                  onClick={onApply}
-                  fill
-                  disabled={Boolean(isNewPanel) ? false : !isSaveable}
-                  iconType="check"
-                  data-test-subj="applyFlyoutButton"
+                <EuiToolTip
+                  content={applyButtonDisabledTooltip}
+                  display={applyButtonDisabledTooltip ? 'inlineBlock' : 'block'}
                 >
-                  {applyButtonLabel}
-                </EuiButton>
+                  <EuiButton
+                    onClick={onApply}
+                    fill
+                    disabled={!isSaveable}
+                    iconType="check"
+                    data-test-subj="applyFlyoutButton"
+                  >
+                    {applyButtonLabel}
+                  </EuiButton>
+                </EuiToolTip>
               </EuiFlexItem>
             )}
           </EuiFlexGroup>

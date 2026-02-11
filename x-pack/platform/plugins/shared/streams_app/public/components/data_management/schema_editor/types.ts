@@ -61,11 +61,12 @@ export interface SchemaEditorProps {
   onRefreshData?: () => void;
   onFieldSelection: (names: string[], selected: boolean) => void;
   fieldSelection: string[];
-  stream: Streams.ingest.all.Definition;
+  stream: Streams.all.Definition;
   withControls?: boolean;
   withFieldSimulation?: boolean;
   withTableActions?: boolean;
   withToolbar?: boolean;
+  enableGeoPointSuggestions?: boolean;
 }
 
 export const isSchemaFieldTyped = (field: SchemaField): field is MappedSchemaField => {

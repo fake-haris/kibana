@@ -15,7 +15,6 @@
             }
         ] */
 
-import fs from 'fs';
 import prConfigs from '../../../pull_requests.json';
 import { runPreBuild } from './pre_build';
 import {
@@ -23,6 +22,8 @@ import {
   doAnyChangesMatch,
   getAgentImageConfig,
   emitPipeline,
+  getPipeline,
+  prHasFIPSLabel,
 } from '#pipeline-utils';
 
 const prConfig = prConfigs.jobs.find((job) => job.pipelineSlug === 'kibana-pull-request');
@@ -36,11 +37,6 @@ if (!prConfig) {
 const GITHUB_PR_LABELS = process.env.GITHUB_PR_LABELS ?? '';
 const REQUIRED_PATHS = prConfig.always_require_ci_on_changed!.map((r) => new RegExp(r, 'i'));
 const SKIPPABLE_PR_MATCHERS = prConfig.skip_ci_on_only_changed!.map((r) => new RegExp(r, 'i'));
-
-const getPipeline = (filename: string, removeSteps = true) => {
-  const str = fs.readFileSync(filename).toString();
-  return removeSteps ? str.replace(/^steps:/, '') : str;
-};
 
 (async () => {
   const pipeline: string[] = [];
@@ -69,6 +65,10 @@ const getPipeline = (filename: string, removeSteps = true) => {
     } else {
       pipeline.push(getPipeline('.buildkite/pipelines/pull_request/base.yml', false));
       pipeline.push(getPipeline('.buildkite/pipelines/pull_request/pick_test_groups.yml'));
+    }
+
+    if (prHasFIPSLabel()) {
+      pipeline.push(getPipeline('.buildkite/pipelines/fips/verify_fips_enabled.yml'));
     }
 
     pipeline.push(getPipeline('.buildkite/pipelines/pull_request/scout_tests.yml'));
@@ -101,7 +101,7 @@ const getPipeline = (filename: string, removeSteps = true) => {
     if (
       (await doAnyChangesMatch([
         /^x-pack\/solutions\/observability\/plugins\/apm/,
-        /^src\/platform\/packages\/shared\/kbn-apm-synthtrace/,
+        /^src\/platform\/packages\/shared\/kbn-synthtrace/,
       ])) ||
       GITHUB_PR_LABELS.includes('ci:all-cypress-suites')
     ) {
@@ -144,8 +144,8 @@ const getPipeline = (filename: string, removeSteps = true) => {
       /^x-pack\/platform\/plugins\/shared\/stack_connectors\/server\/connector_types\/inference/,
     ];
     const agentBuilderPaths = [
-      /^x-pack\/platform\/plugins\/shared\/onechat/,
-      /^x-pack\/platform\/packages\/shared\/onechat/,
+      /^x-pack\/platform\/plugins\/shared\/agent_builder/,
+      /^x-pack\/platform\/packages\/shared\/agent_builder/,
     ];
 
     if (
@@ -191,6 +191,12 @@ const getPipeline = (filename: string, removeSteps = true) => {
 
     if (GITHUB_PR_LABELS.includes('ci:build-docker-fips')) {
       pipeline.push(getPipeline('.buildkite/pipelines/pull_request/fips.yml'));
+    }
+
+    if (GITHUB_PR_LABELS.includes('ci:entity-store-performance')) {
+      pipeline.push(
+        getPipeline('.buildkite/pipelines/pull_request/trigger_entity_store_performance.yml')
+      );
     }
 
     if (
@@ -268,7 +274,7 @@ const getPipeline = (filename: string, removeSteps = true) => {
         /^x-pack\/solutions\/security\/plugins\/security_solution_ess/,
         /^x-pack\/solutions\/security\/plugins\/security_solution_serverless/,
         /^x-pack\/platform\/plugins\/shared\/task_manager/,
-        /^x-pack\/platform\/plugins\/shared\/timelines/,
+        /^x-pack\/solutions\/security\/plugins\/timelines/,
         /^x-pack\/platform\/plugins\/shared\/triggers_actions_ui\/public\/application\/sections\/action_connector_form/,
         /^x-pack\/platform\/plugins\/shared\/triggers_actions_ui\/public\/application\/context\/actions_connectors_context\.tsx/,
         /^x-pack\/platform\/plugins\/shared\/triggers_actions_ui\/server\/connector_types\/openai/,
@@ -356,7 +362,7 @@ const getPipeline = (filename: string, removeSteps = true) => {
         /^x-pack\/solutions\/security\/plugins\/security_solution_serverless/,
         /^x-pack\/platform\/plugins\/shared\/task_manager/,
         /^x-pack\/solutions\/security\/plugins\/threat_intelligence/,
-        /^x-pack\/platform\/plugins\/shared\/timelines/,
+        /^x-pack\/solutions\/security\/plugins\/timelines/,
         /^x-pack\/platform\/plugins\/shared\/triggers_actions_ui/,
         /^x-pack\/platform\/plugins\/shared\/usage_collection\/public/,
         /^x-pack\/test\/functional\/es_archives\/security_solution/,
@@ -419,7 +425,7 @@ const getPipeline = (filename: string, removeSteps = true) => {
         /^x-pack\/solutions\/security\/plugins\/security_solution_serverless/,
         /^x-pack\/platform\/plugins\/shared\/task_manager/,
         /^x-pack\/solutions\/security\/plugins\/threat_intelligence/,
-        /^x-pack\/platform\/plugins\/shared\/timelines/,
+        /^x-pack\/solutions\/security\/plugins\/timelines/,
         /^x-pack\/platform\/plugins\/shared\/triggers_actions_ui/,
         /^x-pack\/platform\/plugins\/shared\/usage_collection\/public/,
         /^x-pack\/test\/functional\/es_archives\/security_solution/,
@@ -459,6 +465,21 @@ const getPipeline = (filename: string, removeSteps = true) => {
         getPipeline(
           '.buildkite/pipelines/pull_request/security_solution/cloud_security_posture.yml'
         )
+      );
+    }
+
+    if (
+      (await doAnyChangesMatch([
+        /^x-pack\/platform\/plugins\/shared\/fleet/,
+        /^x-pack\/packages\/kbn-cloud-security-posture/,
+        /^x-pack\/solutions\/security\/plugins\/cloud_security_posture/,
+        /^x-pack\/solutions\/security\/plugins\/security_solution/,
+        /^src\/platform\/packages\/shared\/kbn-scout\/src\/servers\/configs\/custom\/cspm_agentless/,
+      ])) ||
+      GITHUB_PR_LABELS.includes('ci:cloud-security-posture-scout')
+    ) {
+      pipeline.push(
+        getPipeline('.buildkite/pipelines/pull_request/security_solution/cspm_agentless_scout.yml')
       );
     }
 
@@ -506,23 +527,12 @@ const getPipeline = (filename: string, removeSteps = true) => {
       pipeline.push(getPipeline('.buildkite/pipelines/pull_request/check_saved_objects.yml'));
     }
 
-    if (
-      (await doAnyChangesMatch([
-        /^packages\/kbn-babel-preset/,
-        /^packages\/kbn-repo-file-maps/,
-        /^src\/platform\/packages\/private\/kbn-babel-transform/,
-        /^src\/platform\/packages\/private\/kbn-import-resolver/,
-        /^src\/platform\/packages\/private\/kbn-jest-serializers/,
-        /^src\/platform\/packages\/private\/kbn-repo-packages/,
-        /^src\/platform\/packages\/shared\/kbn-babel-register/,
-        /^src\/platform\/packages\/shared\/kbn-jest-benchmarks/,
-        /^src\/platform\/packages\/shared\/kbn-repo-info/,
-        /^src\/platform\/packages\/shared\/kbn-test/,
-        /^src\/setup_node_env/,
-      ])) ||
-      GITHUB_PR_LABELS.includes('ci:bench-jest')
-    ) {
+    if (GITHUB_PR_LABELS.includes('ci:bench-jest')) {
       pipeline.push(getPipeline('.buildkite/pipelines/pull_request/jest_bench.yml'));
+    }
+
+    if (GITHUB_PR_LABELS.includes('ci:bench-ftr')) {
+      pipeline.push(getPipeline('.buildkite/pipelines/pull_request/ftr_bench.yml'));
     }
 
     pipeline.push(getPipeline('.buildkite/pipelines/pull_request/post_build.yml'));

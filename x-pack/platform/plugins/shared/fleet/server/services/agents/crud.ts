@@ -442,7 +442,11 @@ export async function getAllAgentsByKuery(
 export async function fetchAllAgentsByKuery(
   esClient: ElasticsearchClient,
   soClient: SavedObjectsClientContract,
-  options: ListWithKuery & { spaceId?: string }
+  options: ListWithKuery & {
+    spaceId?: string;
+    runtimeFields?: estypes.SearchRequest['runtime_mappings'];
+    showInactive?: boolean;
+  }
 ): Promise<AsyncIterable<Agent[]>> {
   const {
     kuery = '',
@@ -450,15 +454,23 @@ export async function fetchAllAgentsByKuery(
     sortField = 'enrolled_at',
     sortOrder = 'desc',
     spaceId,
+    showInactive = true,
   } = options;
 
   const filters = await _getSpaceAwarenessFilter(spaceId);
   if (kuery && kuery !== '') {
     filters.push(kuery);
   }
+  if (showInactive === false) {
+    filters.push(ACTIVE_AGENT_CONDITION);
+  }
   const kueryNode = _joinFilters(filters);
   const query = kueryNode ? { query: toElasticsearchQuery(kueryNode) } : {};
-  const runtimeFields = await buildAgentStatusRuntimeField(soClient);
+  const runtimeFields = Object.assign(
+    await buildAgentStatusRuntimeField(soClient),
+    options.runtimeFields
+  );
+
   const sort = getSortConfig(sortField, sortOrder);
 
   try {

@@ -25,7 +25,10 @@ const tab1 = getTabStateMock({
   duplicatedFromId: '0',
   initialInternalState: {
     serializedSearchSource: { index: 'test-data-view-1' },
+  },
+  attributes: {
     visContext: { foo: 'bar' },
+    controlGroupState: undefined,
   },
   globalState: {
     timeRange: { from: 'now-7d', to: 'now' },
@@ -38,7 +41,10 @@ const tab2 = getTabStateMock({
   label: 'Tab 2',
   initialInternalState: {
     serializedSearchSource: { index: 'test-data-view-2' },
+  },
+  attributes: {
     visContext: { bar: 'foo' },
+    controlGroupState: undefined,
   },
   globalState: {
     timeRange: { from: 'now-15m', to: 'now' },
@@ -71,6 +77,7 @@ describe('tab mapping utils', () => {
             "headerRowHeight": undefined,
             "hideAggregatedPreview": undefined,
             "hideChart": false,
+            "interval": undefined,
             "query": undefined,
             "rowHeight": undefined,
             "rowsPerPage": undefined,
@@ -78,7 +85,16 @@ describe('tab mapping utils', () => {
             "sort": Array [],
             "viewMode": undefined,
           },
-          "controlGroupState": undefined,
+          "attributes": Object {
+            "controlGroupState": undefined,
+            "visContext": Object {
+              "bar": "foo",
+            },
+          },
+          "cascadedDocumentsState": Object {
+            "availableCascadeGroups": Array [],
+            "selectedCascadeGroups": Array [],
+          },
           "dataRequestParams": Object {
             "isSearchSessionRestored": false,
             "searchSessionId": undefined,
@@ -87,6 +103,7 @@ describe('tab mapping utils', () => {
           },
           "duplicatedFromId": "0",
           "esqlVariables": Array [],
+          "expandedDoc": undefined,
           "forceFetchOnSelect": false,
           "globalState": Object {
             "refreshInterval": Object {
@@ -100,13 +117,12 @@ describe('tab mapping utils', () => {
           },
           "id": "2",
           "initialInternalState": Object {
-            "controlGroupJson": undefined,
             "serializedSearchSource": Object {
               "index": "test-data-view-2",
             },
-            "visContext": Object {
-              "bar": "foo",
-            },
+          },
+          "initializationState": Object {
+            "initializationStatus": "NotStarted",
           },
           "isDataViewLoading": false,
           "label": "Tab 2",
@@ -147,6 +163,7 @@ describe('tab mapping utils', () => {
             "headerRowHeight": undefined,
             "hideAggregatedPreview": undefined,
             "hideChart": false,
+            "interval": undefined,
             "query": undefined,
             "rowHeight": undefined,
             "rowsPerPage": undefined,
@@ -154,7 +171,16 @@ describe('tab mapping utils', () => {
             "sort": Array [],
             "viewMode": undefined,
           },
-          "controlGroupState": undefined,
+          "attributes": Object {
+            "controlGroupState": undefined,
+            "visContext": Object {
+              "bar": "foo",
+            },
+          },
+          "cascadedDocumentsState": Object {
+            "availableCascadeGroups": Array [],
+            "selectedCascadeGroups": Array [],
+          },
           "dataRequestParams": Object {
             "isSearchSessionRestored": false,
             "searchSessionId": undefined,
@@ -163,6 +189,7 @@ describe('tab mapping utils', () => {
           },
           "duplicatedFromId": "0",
           "esqlVariables": Array [],
+          "expandedDoc": undefined,
           "forceFetchOnSelect": false,
           "globalState": Object {
             "refreshInterval": Object {
@@ -176,13 +203,12 @@ describe('tab mapping utils', () => {
           },
           "id": "2",
           "initialInternalState": Object {
-            "controlGroupJson": undefined,
             "serializedSearchSource": Object {
               "index": "test-data-view-2",
             },
-            "visContext": Object {
-              "bar": "foo",
-            },
+          },
+          "initializationState": Object {
+            "initializationStatus": "NotStarted",
           },
           "isDataViewLoading": false,
           "label": "Tab 2",
@@ -220,6 +246,7 @@ describe('tab mapping utils', () => {
       expect(savedSearch).toMatchInlineSnapshot(`
         Object {
           "breakdownField": undefined,
+          "chartInterval": undefined,
           "columns": Array [
             "column1",
           ],
@@ -290,6 +317,7 @@ describe('tab mapping utils', () => {
       expect(savedObjectTab).toMatchInlineSnapshot(`
         Object {
           "breakdownField": undefined,
+          "chartInterval": undefined,
           "columns": Array [
             "column1",
           ],
@@ -323,6 +351,7 @@ describe('tab mapping utils', () => {
       expect(savedObjectTab).toMatchInlineSnapshot(`
         Object {
           "breakdownField": undefined,
+          "chartInterval": undefined,
           "columns": Array [
             "column1",
           ],
@@ -371,6 +400,7 @@ describe('tab mapping utils', () => {
       expect(savedObjectTab).toMatchInlineSnapshot(`
         Object {
           "breakdownField": undefined,
+          "chartInterval": undefined,
           "columns": Array [
             "default_column",
           ],

@@ -9,12 +9,11 @@ import type {
   Logger,
   SavedObject,
   SavedObjectsClientContract,
+  KibanaRequest,
 } from '@kbn/core/server';
 import { SavedObjectsErrorHelpers } from '@kbn/core/server';
 
 import { PackageSavedObjectConflictError } from '../../../../errors';
-
-import type { HTTPAuthorizationHeader } from '../../../../../common/http_authorization_header';
 import { INSTALL_STATES } from '../../../../../common/types';
 import type { PackageInstallContext, StateNames, StateContext } from '../../../../../common/types';
 import type { PackageAssetReference } from '../../../../types';
@@ -62,6 +61,7 @@ import {
 import type { StateMachineDefinition, StateMachineStates } from './state_machine';
 import { handleState } from './state_machine';
 import { stepCreateAlertingRules } from './steps/step_create_alerting_rules';
+import { cleanupEsqlViewsStep, stepInstallEsqlViews } from './steps/step_install_esql_views';
 
 export interface InstallContext extends StateContext<StateNames> {
   savedObjectsClient: SavedObjectsClientContract;
@@ -74,7 +74,7 @@ export interface InstallContext extends StateContext<StateNames> {
   spaceId: string;
   force?: boolean;
   verificationResult?: PackageVerificationResult;
-  authorizationHeader?: HTTPAuthorizationHeader | null;
+  request?: KibanaRequest;
   ignoreMappingUpdateErrors?: boolean;
   skipDataStreamRollover?: boolean;
   retryFromLastState?: boolean;
@@ -98,6 +98,12 @@ const regularStatesDefinition: StateMachineStates<StateNames> = {
   },
   install_precheck: {
     onTransition: stepInstallPrecheck,
+    nextState: INSTALL_STATES.INSTALL_ESQL_VIEWS,
+    onPostTransition: updateLatestExecutedState,
+  },
+  install_esql_views: {
+    onPreTransition: cleanupEsqlViewsStep,
+    onTransition: stepInstallEsqlViews,
     nextState: INSTALL_STATES.INSTALL_KIBANA_ASSETS,
     onPostTransition: updateLatestExecutedState,
   },

@@ -49,7 +49,7 @@ export function FieldsTable({
   controls: TControls;
   defaultColumns: TableColumnName[];
   fields: SchemaField[];
-  stream: Streams.ingest.all.Definition;
+  stream: Streams.all.Definition;
   withTableActions: boolean;
   withToolbar: boolean | EuiDataGridToolBarVisibilityOptions;
   selectedFields: string[];
@@ -128,7 +128,7 @@ export function FieldsTable({
 const createCellRenderer =
   (
     fields: SchemaField[],
-    stream: Streams.ingest.all.Definition
+    stream: Streams.all.Definition
   ): EuiDataGridCellProps['renderCellValue'] =>
   ({ rowIndex, columnId }) => {
     const field = fields[rowIndex];
@@ -194,6 +194,7 @@ const createCellRenderer =
       return EMPTY_CONTENT;
     }
 
+    // @ts-expect-error upgrade typescript v5.9.3
     return <>{field[columnId as keyof SchemaField] || EMPTY_CONTENT}</>;
   };
 

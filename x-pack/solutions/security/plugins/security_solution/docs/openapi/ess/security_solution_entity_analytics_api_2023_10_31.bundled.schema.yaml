@@ -499,9 +499,10 @@ paths:
                       message: Invalid monitored field
                       username: john.doe
                   stats:
-                    failed: 1
-                    successful: 1
-                    total: 2
+                    failedOperations: 1
+                    successfulOperations: 1
+                    totalOperations: 2
+                    uploaded: 1
                 type: object
                 properties:
                   errors:
@@ -2038,6 +2039,28 @@ components:
           items:
             $ref: '#/components/schemas/RiskScoreInput'
           type: array
+        modifiers:
+          description: A list of modifiers that were applied to the risk score calculation.
+          items:
+            type: object
+            properties:
+              contribution:
+                format: double
+                type: number
+              metadata:
+                additionalProperties: true
+                type: object
+              modifier_value:
+                format: double
+                type: number
+              subtype:
+                type: string
+              type:
+                type: string
+            required:
+              - type
+              - contribution
+          type: array
         notes:
           items:
             type: string
@@ -2179,6 +2202,9 @@ components:
             event:
               type: object
               properties:
+                '@timestamp':
+                  format: date-time
+                  type: string
                 ingested:
                   format: date-time
                   type: string
@@ -2291,16 +2317,19 @@ components:
     PrivmonUserCsvUploadStats:
       type: object
       properties:
-        failed:
+        failedOperations:
           type: integer
-        successful:
+        successfulOperations:
           type: integer
-        total:
+        totalOperations:
+          type: integer
+        uploaded:
           type: integer
       required:
-        - successful
-        - failed
-        - total
+        - successfulOperations
+        - uploaded
+        - failedOperations
+        - totalOperations
     RiskEngineScheduleNowErrorResponse:
       type: object
       properties:
@@ -2519,6 +2548,31 @@ components:
     UserName:
       type: object
       properties:
+        entity_analytics_monitoring:
+          description: Entity analytics monitoring configuration for the user
+          type: object
+          properties:
+            labels:
+              description: Array of labels associated with the user
+              items:
+                type: object
+                properties:
+                  field:
+                    description: The field name for the label
+                    type: string
+                  source:
+                    description: >-
+                      The source where this label was created (api, csv, or
+                      index_sync)
+                    enum:
+                      - api
+                      - csv
+                      - index_sync
+                    type: string
+                  value:
+                    description: The value of the label
+                    type: string
+              type: array
         user:
           type: object
           properties:

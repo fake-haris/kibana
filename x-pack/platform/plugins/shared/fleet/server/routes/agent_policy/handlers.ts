@@ -10,11 +10,9 @@ import type { KibanaRequest, RequestHandler, ResponseHeaders } from '@kbn/core/s
 import pMap from 'p-map';
 import { dump } from 'js-yaml';
 
-import { isEmpty } from 'lodash';
+import { isEmpty, uniq } from 'lodash';
 
 import { ALL_SPACES_ID, FIPS_AGENT_KUERY, inputsFormat } from '../../../common/constants';
-
-import { HTTPAuthorizationHeader } from '../../../common/http_authorization_header';
 
 import { fullAgentPolicyToYaml } from '../../../common/services';
 import {
@@ -46,6 +44,8 @@ import type {
   GetListAgentPolicyOutputsRequestSchema,
   GetAutoUpgradeAgentsStatusRequestSchema,
   CreateAgentAndPackagePolicyRequestSchema,
+  RunAgentPolicyRevisionsCleanupTaskRequestSchema,
+  RunAgentPolicyRevisionsCleanupTaskResponseSchema,
 } from '../../types';
 
 import type {
@@ -71,9 +71,12 @@ import { updateAgentPolicySpaces } from '../../services/spaces/agent_policy';
 import { packagePolicyToSimplifiedPackagePolicy } from '../../../common/services/simplified_package_policy_helper';
 import { FLEET_API_PRIVILEGES } from '../../constants/api_privileges';
 import { getAutoUpgradeAgentsStatus } from '../../services/agents';
+import { cleanupPolicyRevisions } from '../../tasks/fleet_policy_revisions_cleanup/cleanup_policy_revisions';
 
 import { createPackagePolicyHandler } from '../package_policy/handlers';
 import { getLatestAgentAvailableDockerImageVersion } from '../../services/agents';
+
+const deduplicateIds = (ids: string[]) => uniq(ids);
 
 export async function populateAssignedAgentsCount(
   agentClient: AgentClient,
@@ -231,7 +234,8 @@ export const bulkGetAgentPoliciesHandler: FleetRequestHandler<
         ? coreContext.savedObjects.client
         : fleetContext.internalSoClient;
 
-    const { full: withPackagePolicies = false, ignoreMissing = false, ids } = request.body;
+    const { full: withPackagePolicies = false, ignoreMissing = false } = request.body;
+    const ids = deduplicateIds(request.body.ids);
     if (!authzFleetReadAgentPolicies && withPackagePolicies) {
       throw new FleetUnauthorizedError(
         'full query parameter require agent policies read permissions'
@@ -354,7 +358,6 @@ export const createAgentPolicyHandler: FleetRequestHandler<
 
   const { has_fleet_server: hasFleetServer, force, ...newPolicy } = request.body;
   const spaceId = fleetContext.spaceId;
-  const authorizationHeader = HTTPAuthorizationHeader.parseFromRequest(request, user?.username);
   const { space_ids: spaceIds } = request.body;
 
   logger.debug(`Creating agent policy [${newPolicy.name}]`);
@@ -374,6 +377,15 @@ export const createAgentPolicyHandler: FleetRequestHandler<
       }
     }
 
+    if (
+      appContextService.getExperimentalFeatures().disableAgentlessLegacyAPI &&
+      request.body.supports_agentless
+    ) {
+      throw new FleetError(
+        'To create agentless agent policies, use the Fleet agentless policies API.'
+      );
+    }
+
     const agentPolicy = await createAgentPolicyWithPackages({
       soClient,
       esClient,
@@ -384,7 +396,7 @@ export const createAgentPolicyHandler: FleetRequestHandler<
       monitoringEnabled,
       spaceId,
       user,
-      authorizationHeader,
+      request,
       force,
     });
 
@@ -572,6 +584,18 @@ export const updateAgentPolicyHandler: FleetRequestHandler<
         `spaceId now set to [${spaceId}] for updating agent policy [${request.params.agentPolicyId}]`
       );
     }
+    const soClient = appContextService.getInternalUserSOClientForSpaceId(spaceId);
+    const existingAgentPolicy = await agentPolicyService.get(
+      soClient,
+      request.params.agentPolicyId,
+      false
+    );
+    if (existingAgentPolicy?.supports_agentless || data.supports_agentless) {
+      throw new FleetError(
+        'To update agentless agent policies, use the Fleet agentless policies API.'
+      );
+    }
+
     const agentPolicy = await agentPolicyService.update(
       appContextService.getInternalUserSOClientForSpaceId(spaceId),
       esClient,
@@ -877,7 +901,7 @@ export const GetListAgentPolicyOutputsHandler: FleetRequestHandler<
 > = async (context, request, response) => {
   const coreContext = await context.core;
   const soClient = coreContext.savedObjects.client;
-  const { ids } = request.body;
+  const ids = deduplicateIds(request.body.ids);
 
   if (!ids) {
     return response.ok({
@@ -892,6 +916,37 @@ export const GetListAgentPolicyOutputsHandler: FleetRequestHandler<
 
   const body: GetListAgentPolicyOutputsResponse = {
     items: outputsList,
+  };
+
+  return response.ok({
+    body,
+  });
+};
+
+export const RunAgentPolicyRevisionsCleanupTaskHandler: FleetRequestHandler<
+  undefined,
+  undefined,
+  TypeOf<typeof RunAgentPolicyRevisionsCleanupTaskRequestSchema.body>
+> = async (context, request, response) => {
+  const coreContext = await context.core;
+  const esClient = coreContext.elasticsearch.client.asInternalUser;
+  const logger = appContextService.getLogger().get('httpRunAgentPolicyRevisionsCleanupTaskHandler');
+  const kbnConfig = appContextService.getConfig()?.fleetPolicyRevisionsCleanup;
+
+  const config = {
+    maxRevisions: kbnConfig?.maxRevisions,
+    maxPolicies: kbnConfig?.maxPoliciesPerRun,
+    ...request.body,
+  };
+
+  const result = await cleanupPolicyRevisions(esClient, {
+    logger,
+    config,
+  });
+
+  const body: TypeOf<typeof RunAgentPolicyRevisionsCleanupTaskResponseSchema> = {
+    success: true,
+    totalDeletedRevisions: result?.totalDeletedRevisions ?? 0,
   };
 
   return response.ok({
