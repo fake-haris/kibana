@@ -14,11 +14,8 @@ const defaultSettings = {
 };
 
 test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
-  test.beforeAll(async ({ kbnClient, esArchiver }) => {
-    // await kbnClient.importExport.load(
-    //   'src/platform/test/functional/fixtures/kbn_archiver/dashboard/current/kibana'
-    // );
-
+  test.beforeAll(async ({ kbnClient, apiServices }) => {
+    await apiServices.sampleData.install('logs');
     await kbnClient.uiSettings.update(defaultSettings);
   });
 
@@ -27,7 +24,8 @@ test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
     await pageObjects.dashboard.goto();
   });
 
-  test.afterAll(async ({ kbnClient }) => {
+  test.afterAll(async ({ kbnClient, apiServices }) => {
+    await apiServices.sampleData.remove('logs');
     await kbnClient.savedObjects.cleanStandardList();
   });
 
