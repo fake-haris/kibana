@@ -5,21 +5,20 @@
  * 2.0.
  */
 
-import { expect, test } from '@kbn/scout';
+import { expect } from '@kbn/scout/ui';
+import { test, tags } from '@kbn/scout';
 
 const defaultSettings = {
-  defaultIndex: 'd3d7af60-4c81-11e8-b3d7-01146121b73d',
+  defaultIndex: 'kibana_sample_data_logs',
   'dateFormat:tz': 'UTC',
 };
 
-test.describe.only('Dashboard app', { tag: ['@ess'] }, () => {
+test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
   test.beforeAll(async ({ kbnClient, esArchiver }) => {
-    await kbnClient.importExport.load(
-      'src/platform/test/functional/fixtures/kbn_archiver/dashboard/current/kibana'
-    );
-    await esArchiver.loadIfNeeded(
-      'src/platform/test/functional/fixtures/es_archiver/kibana_sample_data_flights'
-    );
+    // await kbnClient.importExport.load(
+    //   'src/platform/test/functional/fixtures/kbn_archiver/dashboard/current/kibana'
+    // );
+
     await kbnClient.uiSettings.update(defaultSettings);
   });
 
@@ -29,7 +28,7 @@ test.describe.only('Dashboard app', { tag: ['@ess'] }, () => {
   });
 
   test.afterAll(async ({ kbnClient }) => {
-    await kbnClient.savedObjects.clean({ types: ['dashboard', 'index-pattern'] });
+    await kbnClient.savedObjects.cleanStandardList();
   });
 
   test('should create dashboard with ES|QL and Lens panels', async ({ page, pageObjects }) => {
@@ -38,27 +37,26 @@ test.describe.only('Dashboard app', { tag: ['@ess'] }, () => {
     // Open new dashboard
     await pageObjects.dashboard.openNewDashboard();
 
-    // Add ES|QL panel
-    pageObjects.dashboard.addPanelFromLibrary('ES|QL');
-    // Apply the ES|QL panel
-    pageObjects.dashboard.applyAndCloseESQLPanel();
-    // Verify ES|QL panel is present
-    await expect(page.testSubj.locator('lens-embeddable')).toBeVisible();
-
-    // Add Lens panel
-    await pageObjects.dashboard.addPanelFromLibrary('Lens');
-    // Apply the Lens panel
+    // Add ES|QL panel and save it
+    await pageObjects.dashboard.addNewPanel('ES|QL');
+    await pageObjects.dashboard.applyAndCloseESQLPanel();
+    await expect(page.testSubj.locator('lnsVisualizationContainer')).toBeVisible();
+    // Add Lens paneln and save it
+    await pageObjects.dashboard.addNewPanel('Lens');
     await pageObjects.dashboard.addRecordersAndSave();
-
     // Verify both Lens and ESQL panels are present
-    await expect(page.testSubj.locator('echChart')).toBeVisible();
-    await expect(page.testSubj.locator('lens-embeddable')).toBeVisible();
-
+    await expect(page.testSubj.locator('xyVisChart')).toBeVisible();
+    await expect(page.testSubj.locator('lnsVisualizationContainer')).toBeVisible();
+    await expect.poll(async () => await page.testSubj.locator('dashboardPanel').count()).toBe(2);
+    // Add a Custom visualization panel and save it
+    await pageObjects.dashboard.addNewPanel('Custom visualization');
+    await pageObjects.dashboard.clickVisualizeSaveAndReturn();
+    // Verify the Custom visualization panel is present and the previous two panels are still present
+    await expect.poll(async () => await page.testSubj.locator('dashboardPanel').count()).toBe(3);
     // Save the dashboard
     await pageObjects.dashboard.saveDashboard(dashboardName);
-
-    // Verify dashboard was saved and contains both panels
+    // Verify dashboard was saved
     const heading = page.testSubj.locator('breadcrumb last');
-    await expect(heading).toHaveText('Editing' + dashboardName);
+    await expect(heading).toHaveText('Editing ' + dashboardName);
   });
 });

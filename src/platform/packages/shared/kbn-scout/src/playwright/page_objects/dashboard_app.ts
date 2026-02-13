@@ -318,12 +318,12 @@ export class DashboardApp {
     await this.toasts.closeAll();
   }
 
-  /**
-   * Adds a panel from the library without forcing a type filter.
-   */
-  async addPanelFromLibrary(panelName: string, embeddableType?: string) {
-    return this.addEmbeddable(panelName, embeddableType);
-  }
+  // /**
+  //  * Adds a panel from the library without forcing a type filter.
+  //  */
+  // async addPanelFromLibrary(panelName: string, embeddableType?: string) {
+  //   return this.addEmbeddable(panelName, embeddableType);
+  // }
 
   /**
    * Adds a saved search to the dashboard.
@@ -889,13 +889,15 @@ export class DashboardApp {
     await this.page.testSubj
       .locator('lnsFieldListPanelField-___records___')
       .dragTo(this.page.testSubj.locator('workspace-drag-drop-prompt'));
-    await this.page.testSubj.waitForSelector('echScreenReaderSummary', { state: 'visible' });
+    await this.page.locator('.echCanvasRenderer').waitFor({ state: 'visible' });
     await this.page.testSubj.click('lnsApp_saveAndReturnButton');
-    await this.page.testSubj.waitForSelector('echChart', { state: 'visible' });
   }
 
   async applyAndCloseESQLPanel() {
     await this.page.testSubj.click('applyFlyoutButton');
-    await this.page.testSubj.waitForSelector('lens-embeddable', { state: 'visible' });
+  }
+
+  async clickVisualizeSaveAndReturn() {
+    await this.page.testSubj.click('visualizesaveAndReturnButton');
   }
 }
