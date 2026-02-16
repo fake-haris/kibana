@@ -41,7 +41,8 @@ test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
     await expect(page.testSubj.locator('lnsVisualizationContainer')).toBeVisible();
     // Add Lens paneln and save it
     await pageObjects.dashboard.addNewPanel('Lens');
-    await pageObjects.dashboard.addRecordersAndSave();
+    await pageObjects.lens.dragFieldToWorkspace('records');
+    await pageObjects.lens.saveAndReturn();
     // Verify both Lens and ESQL panels are present
     await expect(page.testSubj.locator('xyVisChart')).toBeVisible();
     await expect(page.testSubj.locator('lnsVisualizationContainer')).toBeVisible();
@@ -56,5 +57,30 @@ test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
     // Verify dashboard was saved
     const heading = page.testSubj.locator('breadcrumb last');
     await expect(heading).toHaveText('Editing ' + dashboardName);
+  });
+
+  test('edit existing dashboard and add map and custom visualization panels', async ({
+    page,
+    pageObjects,
+  }) => {
+    const logsDashboardTitle = '[Logs] Web Traffic';
+    // Open the logs dashboard
+    await pageObjects.dashboard.clickDashboardTitleLink(logsDashboardTitle);
+    // validate the dashboard has 12 items before I start adding more
+    await expect.poll(async () => await page.locator('.dshDashboardGrid__item').count()).toBe(12);
+    // Switch to edit mode
+    await pageObjects.dashboard.switchToEditMode();
+    // Add a Map panel
+    await pageObjects.dashboard.addNewPanel('Maps');
+    // Add layer with documents from Kibana Sample Data Logs index
+    await pageObjects.maps.addDocumentsLayer('Kibana Sample Data Logs');
+    await expect.poll(async () => await page.locator('.dshDashboardGrid__item').count()).toBe(13);
+
+    // Add a Custom visualization panel and save it
+    await pageObjects.dashboard.addNewPanel('Custom visualization');
+    await pageObjects.dashboard.clickVisualizeSaveAndReturn();
+    await expect.poll(async () => await page.locator('.dshDashboardGrid__item').count()).toBe(14);
+    // Save the dashboard
+    await pageObjects.dashboard.saveChangesToExistingDashboard();
   });
 });

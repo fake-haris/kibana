@@ -878,19 +878,11 @@ export class DashboardApp {
     await this.page.locator(editVisualizationConfigurationSelector).click();
   }
 
-  async addNewPanel(panelType: 'ES|QL' | 'Lens' | 'Custom visualization') {
+  async addNewPanel(panelType: 'ES|QL' | 'Lens' | 'Custom visualization' | 'Maps') {
     await this.page.testSubj.click('dashboardAddTopNavButton');
     await this.page.testSubj.click('dashboardOpenAddPanelFlyoutButton');
     await this.page.testSubj.click(`create-action-${panelType}`);
     await this.page.testSubj.waitForSelector('dashboardPanelSelectionFlyout', { state: 'hidden' });
-  }
-
-  async addRecordersAndSave() {
-    await this.page.testSubj
-      .locator('lnsFieldListPanelField-___records___')
-      .dragTo(this.page.testSubj.locator('workspace-drag-drop-prompt'));
-    await this.page.locator('.echCanvasRenderer').waitFor({ state: 'visible' });
-    await this.page.testSubj.click('lnsApp_saveAndReturnButton');
   }
 
   async applyAndCloseESQLPanel() {
@@ -899,5 +891,12 @@ export class DashboardApp {
 
   async clickVisualizeSaveAndReturn() {
     await this.page.testSubj.click('visualizesaveAndReturnButton');
+  }
+
+  async clickDashboardTitleLink(dashboardTitle: string) {
+    await this.page.testSubj.click(
+      `dashboardListingTitleLink-${dashboardTitle.split(' ').join('-')}`
+    );
+    await this.waitForRenderComplete();
   }
 }
