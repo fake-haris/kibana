@@ -9,7 +9,7 @@
 
 import { apiTest, tags, type RoleApiCredentials } from '@kbn/scout';
 import { expect } from '@kbn/scout/api';
-import { COMMON_HEADERS, DATA_VIEW_PATH, SERVICE_KEY, SERVICE_PATH } from '../fixtures/constants';
+import { COMMON_HEADERS, DATA_VIEW_PATH, SERVICE_KEY, SERVICE_PATH } from '../../fixtures/constants';
 
 /**
  * Tests for data view namespaces/spaces functionality.
