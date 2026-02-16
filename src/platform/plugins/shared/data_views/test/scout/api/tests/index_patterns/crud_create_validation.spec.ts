@@ -9,7 +9,11 @@
 
 import { apiTest, tags, type RoleApiCredentials } from '@kbn/scout';
 import { expect } from '@kbn/scout/api';
-import { COMMON_HEADERS, DATA_VIEW_PATH_LEGACY, SERVICE_KEY_LEGACY } from '../../fixtures/constants';
+import {
+  COMMON_HEADERS,
+  DATA_VIEW_PATH_LEGACY,
+  SERVICE_KEY_LEGACY,
+} from '../../fixtures/constants';
 
 apiTest.describe(
   `POST ${DATA_VIEW_PATH_LEGACY} - validation (legacy index pattern api)`,
