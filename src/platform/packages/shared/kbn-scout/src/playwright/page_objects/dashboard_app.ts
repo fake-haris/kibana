@@ -878,7 +878,7 @@ export class DashboardApp {
     await this.page.locator(editVisualizationConfigurationSelector).click();
   }
 
-  async addNewPanel(panelType: 'ES|QL' | 'Lens' | 'Custom visualization' | 'Maps') {
+  async addNewPanel(panelType: 'ES|QL' | 'Lens' | 'Custom visualization' | 'Maps' | 'Links') {
     await this.page.testSubj.click('dashboardAddTopNavButton');
     await this.page.testSubj.click('dashboardOpenAddPanelFlyoutButton');
     await this.page.testSubj.click(`create-action-${panelType}`);

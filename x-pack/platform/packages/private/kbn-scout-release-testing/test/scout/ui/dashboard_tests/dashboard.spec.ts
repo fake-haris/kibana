@@ -83,4 +83,31 @@ test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
     // Save the dashboard
     await pageObjects.dashboard.saveChangesToExistingDashboard();
   });
+
+  test('Add Dashboard link type and URL link types to a dashboard', async ({
+    page,
+    pageObjects,
+  }) => {
+    const dashboardName = 'Test Dashboard with Links';
+    // Open new dashboard
+    await pageObjects.dashboard.openNewDashboard();
+    // Add a Links panel (opens the panel editor flyout)
+    await pageObjects.dashboard.addNewPanel('Links');
+    await pageObjects.dashboardLinks.expectPanelEditorFlyoutIsOpen();
+    // Add a Dashboard link pointing to the sample data dashboard
+    await pageObjects.dashboardLinks.addDashboardLink('[Logs] Web Traffic');
+    // Add an external URL link
+    await pageObjects.dashboardLinks.addExternalLink('https://www.elastic.co', {
+      linkLabel: 'Elastic Website',
+    });
+    // Save the links panel
+    await pageObjects.dashboardLinks.clickPanelEditorSaveButton();
+    // Verify the links panel is rendered with 2 links
+    await expect.poll(() => pageObjects.dashboardLinks.getNumberOfLinksInPanel()).toBe(2);
+    // Save the dashboard
+    await pageObjects.dashboard.saveDashboard(dashboardName);
+    // Verify dashboard was saved
+    const heading = page.testSubj.locator('breadcrumb last');
+    await expect(heading).toHaveText('Editing ' + dashboardName);
+  });
 });
