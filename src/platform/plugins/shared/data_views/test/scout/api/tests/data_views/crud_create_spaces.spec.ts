@@ -27,8 +27,8 @@ apiTest.describe(
   () => {
     let adminApiCredentials: RoleApiCredentials;
     const fooNamespace = `foo-namespace-${Date.now()}`;
-    // Track created data view IDs for cleanup
-    let createdDataViewIds: string[] = [];
+    // Track created data views for cleanup (with optional spaceId)
+    let createdDataViews: Array<{ id: string; spaceId?: string }> = [];
 
     apiTest.beforeAll(async ({ apiServices, requestAuth, log }) => {
       // Admin role required for creating data views and managing spaces
@@ -42,29 +42,12 @@ apiTest.describe(
       log.info(`Created space: ${fooNamespace}`);
     });
 
-    apiTest.afterEach(async ({ apiClient, log }) => {
+    apiTest.afterEach(async ({ apiServices }) => {
       // Cleanup: delete all data views created during the test
-      for (const id of createdDataViewIds) {
-        try {
-          const response = await apiClient.delete(`${DATA_VIEW_PATH}/${id}`, {
-            headers: {
-              ...COMMON_HEADERS,
-              ...adminApiCredentials.apiKeyHeader,
-            },
-          });
-
-          if (response.statusCode === 200) {
-            log.debug(`Cleaned up data view with id: ${id}`);
-          } else {
-            log.warning(
-              `Unexpected status ${response.statusCode} cleaning up data view with id: ${id}`
-            );
-          }
-        } catch (e) {
-          log.warning(`Failed to clean up data view with id: ${id}: ${(e as Error).message}`);
-        }
+      for (const { id, spaceId } of createdDataViews) {
+        await apiServices.dataViews.delete(id, spaceId);
       }
-      createdDataViewIds = [];
+      createdDataViews = [];
     });
 
     apiTest.afterAll(async ({ apiServices, log }) => {
@@ -95,7 +78,7 @@ apiTest.describe(
 
         expect(createResponse.statusCode).toBe(200);
         expect(createResponse.body[SERVICE_KEY].namespaces).toStrictEqual(namespaces);
-        createdDataViewIds.push(createResponse.body[SERVICE_KEY].id);
+        createdDataViews.push({ id: createResponse.body[SERVICE_KEY].id });
 
         // Verify the data view is accessible via the list endpoint
         const getResponse = await apiClient.get(SERVICE_PATH, {
@@ -135,7 +118,10 @@ apiTest.describe(
 
         expect(createResponse.statusCode).toBe(200);
         expect(createResponse.body[SERVICE_KEY].namespaces).toStrictEqual([fooNamespace]);
-        const createdId = createResponse.body[SERVICE_KEY].id;
+        createdDataViews.push({
+          id: createResponse.body[SERVICE_KEY].id,
+          spaceId: fooNamespace,
+        });
 
         // Verify via the list endpoint in the same space
         const getResponse = await apiClient.get(`s/${fooNamespace}/${SERVICE_PATH}`, {
@@ -151,14 +137,6 @@ apiTest.describe(
         );
         expect(dataView).toBeDefined();
         expect(dataView.namespaces).toStrictEqual([fooNamespace]);
-
-        // Cleanup in the specific space where it was created
-        await apiClient.delete(`s/${fooNamespace}/${DATA_VIEW_PATH}/${createdId}`, {
-          headers: {
-            ...COMMON_HEADERS,
-            ...adminApiCredentials.apiKeyHeader,
-          },
-        });
       }
     );
   }
