@@ -30,12 +30,12 @@ apiTest.describe(
     // Track created data view IDs for cleanup
     let createdDataViewIds: string[] = [];
 
-    apiTest.beforeAll(async ({ kbnClient, requestAuth, log }) => {
+    apiTest.beforeAll(async ({ apiServices, requestAuth, log }) => {
       // Admin role required for creating data views and managing spaces
       adminApiCredentials = await requestAuth.getApiKey('admin');
 
       // Create a custom space for testing namespace functionality
-      await kbnClient.spaces.create({
+      await apiServices.spaces.create({
         id: fooNamespace,
         name: fooNamespace,
       });
@@ -67,14 +67,10 @@ apiTest.describe(
       createdDataViewIds = [];
     });
 
-    apiTest.afterAll(async ({ kbnClient, log }) => {
-      // Cleanup: delete the test space
-      try {
-        await kbnClient.spaces.delete(fooNamespace);
-        log.info(`Deleted space: ${fooNamespace}`);
-      } catch (e) {
-        log.debug(`Failed to delete space ${fooNamespace}: ${(e as Error).message}`);
-      }
+    apiTest.afterAll(async ({ apiServices, log }) => {
+      // Cleanup: delete the test space (404 is ignored)
+      await apiServices.spaces.delete(fooNamespace);
+      log.info(`Deleted space: ${fooNamespace}`);
     });
 
     apiTest(
