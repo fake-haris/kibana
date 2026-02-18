@@ -110,4 +110,34 @@ test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
     const heading = page.testSubj.locator('breadcrumb last');
     await expect(heading).toHaveText('Editing ' + dashboardName);
   });
+  test('lens panel custom actions - explore in Discover', async ({ page, pageObjects }) => {
+    const panelTitle = 'Test Lens Panel';
+    const dashboardName = 'Test Dashboard Lens Panel Actions';
+
+    await pageObjects.dashboard.openNewDashboard();
+
+    await test.step('add a Lens panel with a title', async () => {
+      await pageObjects.dashboard.addNewPanel('Lens');
+      await pageObjects.lens.dragFieldToWorkspace('records');
+      await pageObjects.lens.saveAndReturn();
+
+      await pageObjects.dashboard.openCustomizePanel();
+      await pageObjects.dashboard.setCustomPanelTitle(panelTitle);
+      await pageObjects.dashboard.saveCustomizePanel();
+    });
+
+    await pageObjects.dashboard.saveDashboard(dashboardName);
+
+    await test.step('click Explore in Discover and validate navigation', async () => {
+      const newPagePromise = page.context().waitForEvent('page');
+      await pageObjects.dashboard.clickPanelAction(
+        'embeddablePanelAction-ACTION_OPEN_IN_DISCOVER',
+        panelTitle
+      );
+      const discoverPage = await newPagePromise;
+      await discoverPage.waitForLoadState();
+      await expect(discoverPage.locator('[data-test-subj="unifiedHistogramChart"]')).toBeVisible();
+      await discoverPage.close();
+    });
+  });
 });
