@@ -1,8 +1,8 @@
 # Define which plugins and packages should be run or skipped in Kibana CI pipeline
 plugins:
   enabled:
-    - console
     - data_views
+    - console
     - discover_enhanced
     - index_management
     - maps
