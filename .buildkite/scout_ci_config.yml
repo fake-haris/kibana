@@ -2,15 +2,12 @@
 plugins:
   enabled:
     - apm
-    - console
-    - custom_branding
-    - dashboard
     - data_views
+    - console
+    - dashboard
     - discover_enhanced
     - index_management
     - infra
-    - intercepts
-    - lens
     - maps
     - observability
     - observability_onboarding
@@ -18,7 +15,6 @@ plugins:
     - profiling
     - search_homepage
     - security_solution
-    - share
     - slo
     - spaces
     - streams_app
