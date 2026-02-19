@@ -139,5 +139,8 @@ test.describe('Dashboard app', { tag: tags.stateful.classic }, () => {
       await expect(discoverPage.locator('[data-test-subj="unifiedHistogramChart"]')).toBeVisible();
       await discoverPage.close();
     });
+    await test.step('save panel to library', async () => {
+      await pageObjects.dashboard.saveToLibrary('Saved Lens Panel', panelTitle);
+    });
   });
 });
