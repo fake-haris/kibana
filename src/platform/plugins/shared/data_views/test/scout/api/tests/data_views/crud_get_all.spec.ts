@@ -21,7 +21,7 @@ apiTest.describe(
       adminApiCredentials = await requestAuth.getApiKey('admin');
     });
 
-    apiTest(`returns list of ${SERVICE_KEY}s`, async ({ apiClient }) => {
+    apiTest('returns list of data views', async ({ apiClient }) => {
       const response = await apiClient.get(SERVICE_PATH, {
         headers: {
           ...COMMON_HEADERS,

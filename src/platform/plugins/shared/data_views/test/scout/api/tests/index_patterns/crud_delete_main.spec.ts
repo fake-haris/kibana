@@ -33,7 +33,7 @@ apiTest.describe(
       createdIds = [];
     });
 
-    apiTest(`deletes an ${SERVICE_KEY_LEGACY}`, async ({ apiClient }) => {
+    apiTest('deletes an index pattern', async ({ apiClient }) => {
       const title = `foo-${Date.now()}-${Math.random()}*`;
 
       const createResponse = await apiClient.post(DATA_VIEW_PATH_LEGACY, {

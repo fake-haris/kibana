@@ -29,7 +29,7 @@ apiTest.describe(
       createdIds = [];
     });
 
-    apiTest(`deletes a ${SERVICE_KEY}`, async ({ apiClient }) => {
+    apiTest('deletes a data view', async ({ apiClient }) => {
       const title = `foo-${Date.now()}-${Math.random()}*`;
 
       const createResponse = await apiClient.post(DATA_VIEW_PATH, {

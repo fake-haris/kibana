@@ -33,7 +33,7 @@ apiTest.describe(
       createdIds = [];
     });
 
-    apiTest(`can retrieve an ${SERVICE_KEY_LEGACY}`, async ({ apiClient }) => {
+    apiTest('can retrieve an index pattern', async ({ apiClient }) => {
       const title = `foo-${Date.now()}-${Math.random()}*`;
 
       const createResponse = await apiClient.post(DATA_VIEW_PATH_LEGACY, {

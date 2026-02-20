@@ -29,7 +29,7 @@ apiTest.describe(
       createdIds = [];
     });
 
-    apiTest(`can retrieve a ${SERVICE_KEY}`, async ({ apiClient }) => {
+    apiTest('can retrieve a data view', async ({ apiClient }) => {
       const title = `foo-${Date.now()}-${Math.random()}*`;
 
       const createResponse = await apiClient.post(DATA_VIEW_PATH, {
