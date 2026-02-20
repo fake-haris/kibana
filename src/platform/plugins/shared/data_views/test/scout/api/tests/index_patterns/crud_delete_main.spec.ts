@@ -16,7 +16,7 @@ import {
 } from '../../fixtures/constants';
 
 apiTest.describe(
-  `DELETE ${DATA_VIEW_PATH_LEGACY}/{id} - main (legacy index pattern api)`,
+  'DELETE api/index_patterns/index_pattern/{id} - main (legacy index pattern api)',
   { tag: tags.deploymentAgnostic },
   () => {
     let adminApiCredentials: RoleApiCredentials;

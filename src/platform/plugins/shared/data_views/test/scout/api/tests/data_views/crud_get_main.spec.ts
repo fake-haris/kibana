@@ -12,7 +12,7 @@ import { expect } from '@kbn/scout/api';
 import { COMMON_HEADERS, DATA_VIEW_PATH, SERVICE_KEY } from '../../fixtures/constants';
 
 apiTest.describe(
-  `GET ${DATA_VIEW_PATH}/{id} - main (data view api)`,
+  'GET api/data_views/data_view/{id} - main (data view api)',
   { tag: tags.deploymentAgnostic },
   () => {
     let adminApiCredentials: RoleApiCredentials;

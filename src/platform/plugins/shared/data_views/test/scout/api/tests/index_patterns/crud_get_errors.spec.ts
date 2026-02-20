@@ -12,7 +12,7 @@ import { expect } from '@kbn/scout/api';
 import { COMMON_HEADERS, DATA_VIEW_PATH_LEGACY } from '../../fixtures/constants';
 
 apiTest.describe(
-  `GET ${DATA_VIEW_PATH_LEGACY}/{id} - errors (legacy index pattern api)`,
+  'GET api/index_patterns/index_pattern/{id} - errors (legacy index pattern api)',
   { tag: tags.deploymentAgnostic },
   () => {
     let adminApiCredentials: RoleApiCredentials;
